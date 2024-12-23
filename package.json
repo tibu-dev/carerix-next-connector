@@ -1,0 +1,35 @@
+{
+  "name": "carerix-next-connector",
+  "version": "0.0.1",
+  "description": "Interact with Carerix from a Next/React project",
+  "main": "build/index.js",
+  "scripts": {
+    "prebuild": "rm -rf ./build",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tibu-dev/carerix-next-connector.git"
+  },
+  "keywords": [
+    "carerix",
+    "next",
+    "react"
+  ],
+  "author": "Stef van Dijk",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/tibu-dev/carerix-next-connector/issues"
+  },
+  "homepage": "https://github.com/tibu-dev/carerix-next-connector#readme",
+  "dependencies": {
+    "@apollo/client": "^3.12.4",
+    "@types/react": "^19.0.2",
+    "moment": "^2.30.1",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
+  }
+}
