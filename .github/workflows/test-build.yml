@@ -1,0 +1,22 @@
+name: 'Build test'
+on:
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  test-storybook:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 20.9.0
+          registry-url: https://npm.pkg.github.com/
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+        env:
+          NPM_AUTH_TOKEN: ${{secrets.TIBU_NPM_INSTALL_TOKEN}}
+      - name: Test build
+        run: npm run build
