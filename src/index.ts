@@ -1,6 +1,7 @@
 import { CarerixEmployeeApply, CarerixVacancy } from './lib/types';
 import {
 	getCarerixVacancies,
+	getCarerixVacanciesPerLocation,
 	getCarerixVacancy,
 	setCarerixEmployeeApply,
 } from './lib/queries';
@@ -8,6 +9,7 @@ import {
 export const carerix = {
 	vacancies: getCarerixVacancies,
 	vacancy: getCarerixVacancy,
+	vacanciesPerLocation: getCarerixVacanciesPerLocation,
 	employeeApply: setCarerixEmployeeApply,
 };
 

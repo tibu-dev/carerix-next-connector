@@ -51,6 +51,29 @@ export const CARERIX_QUERY_VACANCY = gql`
   }
 `;
 
+export const CARERIX_QUERY_VACANCY_PER_LOCATION = gql`
+	query($locationId: ID!) {
+		crCompany(_id: $locationId) {
+			_id
+			name
+			vacancies {
+				items {
+					publications {
+						items {
+							${CARERIX_VACANCY_FIELDS}
+						}
+					}
+
+					titleInformation
+					additionalInfo
+					minSalary
+					maxSalary
+				}
+			}
+		}
+	}
+`;
+
 export const CARERIX_MUTATION_EMPLOYEE_APPLY = gql`
 	mutation ($publicationId: ID!, $data: CREmployeeRequest!) {
 		crEmployeeApply(dedupe: false, pub: $publicationId, request: $data) {

@@ -1,6 +1,6 @@
 {
   "name": "carerix-next-connector",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Interact with Carerix from a Next/React project",
   "main": "build/index.js",
   "scripts": {

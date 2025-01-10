@@ -9,17 +9,22 @@ import {
 	CARERIX_MUTATION_EMPLOYEE_APPLY,
 	CARERIX_QUERY_VACANCIES,
 	CARERIX_QUERY_VACANCY,
+	CARERIX_QUERY_VACANCY_PER_LOCATION,
 } from './gql';
 import moment from 'moment';
 import { parseCarerixVacancy } from './helpers';
 
-export const getCarerixVacancies = async (
-	connection?: Partial<CarerixConnection>,
-) => {
+const getPublicationFilter = (mediumCode: string) => {
 	const dateFormat = 'YYYY-MM-DD HH:mm:ss';
 	const startDate = moment().endOf('day').format(dateFormat);
 	const endDate = moment().startOf('day').add(1, 'day').format(dateFormat);
 
+	return `publicationStart <= (NSCalendarDate) '${startDate}' AND (publicationEnd > (NSCalendarDate) '${endDate}' OR publicationEnd = nil) AND toMedium.code = '${mediumCode}'`;
+};
+
+export const getCarerixVacancies = async (
+	connection?: Partial<CarerixConnection>,
+): Promise<CarerixVacancy[]> => {
 	const { client, options } = await getCarerixGqlClient(connection ?? {});
 	const response = await client.query<{
 		crPublicationPage: {
@@ -28,7 +33,7 @@ export const getCarerixVacancies = async (
 	}>({
 		query: CARERIX_QUERY_VACANCIES,
 		variables: {
-			qualifier: `publicationStart <= (NSCalendarDate) '${startDate}' AND (publicationEnd > (NSCalendarDate) '${endDate}' OR publicationEnd = nil) AND toMedium.code = '${options.mediumCode}'`,
+			qualifier: getPublicationFilter(options.mediumCode),
 		},
 	});
 
@@ -67,6 +72,61 @@ export const getCarerixVacancy = async (
 	}
 
 	return await parseCarerixVacancy(response.data.crPublication);
+};
+
+export const getCarerixVacanciesPerLocation = async (
+	locationId: string,
+	connection?: Partial<CarerixConnection>,
+): Promise<CarerixVacancy[]> => {
+	if (!locationId) {
+		throw new Error('Cannot get Carerix vacancies without locationId');
+	}
+
+	const { client, options } = await getCarerixGqlClient(connection ?? {});
+	const response = await client.query<{
+		crCompany: {
+			vacancies: {
+				items: {
+					publications: {
+						items: GqlCarerixVacancy[];
+					};
+					titleInformation: string;
+					additionalInfo: string;
+					minSalary: number;
+					maxSalary: number;
+				}[];
+			};
+		};
+	}>({
+		query: CARERIX_QUERY_VACANCY_PER_LOCATION,
+		variables: {
+			locationId,
+			qualifier: getPublicationFilter(options.mediumCode),
+		},
+	});
+
+	const items: GqlCarerixVacancy[] = [];
+	response?.data?.crCompany?.vacancies?.items.forEach((vacancy) => {
+		vacancy.publications.items.forEach((publication) => {
+			items.push({
+				...publication,
+				toVacancy: {
+					titleInformation: vacancy.titleInformation,
+					additionalInfo: vacancy.additionalInfo,
+					minSalary: vacancy.minSalary,
+					maxSalary: vacancy.maxSalary,
+				},
+			});
+		});
+	});
+
+	if (!items || !items.length) {
+		return [];
+	}
+
+	const parsedVacancies = await Promise.all(items.map(parseCarerixVacancy));
+
+	return parsedVacancies;
 };
 
 export const setCarerixEmployeeApply = async (
