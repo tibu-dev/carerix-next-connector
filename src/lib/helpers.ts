@@ -15,15 +15,17 @@ export const parseCarerixVacancy = async (
 			requirements: item.requirementsInformation ?? '',
 			offer: item.offerInformation ?? '',
 		},
-		// TODO: Rename into owner..
-		contact: owner,
+		owner: {
+			emailAddress: owner.emailAddress
+		},
 		title: toVacancy.titleInformation,
-		// TODO: Get this again..
-		// location: item.toCompany,
+		company: {
+			id: item.toCompany._id,
+			name: item.toCompany.name
+		},
 		startDate: item.publicationStart,
 		endDate: item.publicationEnd,
 		modified: item.modificationDate,
-		// TODO: This ID needs something mappable.. but in the integration
 		hoursPerWeek: parseInt(toVacancy.additionalInfo['_10361']),
 		salaryRange: {
 			min: toVacancy.minSalary ?? 0,

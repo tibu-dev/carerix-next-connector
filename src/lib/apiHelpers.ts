@@ -1,29 +1,54 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, from, HttpLink, InMemoryCache } from '@apollo/client';
+import { RetryLink } from '@apollo/client/link/retry';
 
-// Get Carerix oAuth
-const getCarerixAuth = async () => {
-	// TODO: I don't think we can eat env vars like this..
+export interface CarerixConnection {
+	clientId: string;
+	secret: string;
+	tokenEndpoint: string;
+	gqlUri: string;
+	mediumCode: string;
+}
+
+const getCarerixConnectionData = (
+	connection?: Partial<CarerixConnection>,
+): CarerixConnection => {
 	const {
 		CARERIX_CLIENT_ID,
 		CARERIX_CLIENT_SECRET,
 		CARERIX_TOKEN_ENDPOINT,
 		CARERIX_GRAPHQL_URI,
+		CARERIX_MEDIUM_CODE,
 	} = process.env;
 
-	if (
-		!CARERIX_CLIENT_ID ||
-		!CARERIX_CLIENT_SECRET ||
-		!CARERIX_TOKEN_ENDPOINT ||
-		!CARERIX_GRAPHQL_URI
-	) {
+	const data = Object.assign(
+		{
+			clientId: CARERIX_CLIENT_ID,
+			secret: CARERIX_CLIENT_SECRET,
+			tokenEndpoint: CARERIX_TOKEN_ENDPOINT,
+			gqlUri:
+				CARERIX_GRAPHQL_URI ??
+				'https://api.carerix.io/graphql/v1/graphql',
+			mediumCode: CARERIX_MEDIUM_CODE ?? 'web',
+		},
+		connection,
+	);
+
+	if (!data.clientId || !data.secret || !data.tokenEndpoint || !data.gqlUri) {
 		throw new Error(
 			'One or more required Carerix .env variables are missing. [CARERIX_CLIENT_ID, CARERIX_CLIENT_SECRET, CARERIX_TOKEN_ENDPOINT, CARERIX_GRAPHQL_URI]',
 		);
 	}
 
-	const data = await fetch(CARERIX_TOKEN_ENDPOINT!, {
+	return data as CarerixConnection;
+};
+
+// Get Carerix oAuth
+const getCarerixAuth = async (connection: CarerixConnection) => {
+	const { tokenEndpoint, secret, clientId } = connection;
+
+	const data = await fetch(tokenEndpoint, {
 		method: 'POST',
-		body: `grant_type=client_credentials&client_id=${CARERIX_CLIENT_ID}&client_secret=${CARERIX_CLIENT_SECRET}`,
+		body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${secret}`,
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
 		},
@@ -33,21 +58,51 @@ const getCarerixAuth = async () => {
 };
 
 // Helper function to extract the access token
-const getCarerixToken = async () => {
-	const authData = await getCarerixAuth();
+const getCarerixToken = async (connection: CarerixConnection) => {
+	const authData = await getCarerixAuth(connection);
 
 	return authData.access_token;
 };
 
-// Set up the Apollo client for Carerix
-export const getCarerixGqlClient = async () => {
-	const ctoken = await getCarerixToken();
+const getApolloLinks = (connection: CarerixConnection, authToken: string) => {
+	return from([
+		new RetryLink({
+			delay: {
+				initial: 300,
+				jitter: true,
+			},
+			attempts: {
+				max: 3,
+			},
+		}),
+		new HttpLink({
+			uri: connection.gqlUri,
+			headers: {
+				Authorization: `Bearer ${authToken}`,
+			},
+		}),
+	]);
+};
 
-	return new ApolloClient({
-		uri: process.env.CARERIX_GRAPHQL_URI,
+// Set up the Apollo client for Carerix
+export const getCarerixGqlClient = async (
+	connection: Partial<CarerixConnection>,
+) => {
+	const connectData = getCarerixConnectionData(connection);
+
+	const ctoken = await getCarerixToken(connectData);
+
+	const client = new ApolloClient({
+		link: getApolloLinks(connectData, ctoken),
 		cache: new InMemoryCache(),
-		headers: {
-			Authorization: `Bearer ${ctoken}`,
-		},
 	});
+
+	const options = {
+		mediumCode: connectData.mediumCode,
+	};
+
+	return {
+		client,
+		options,
+	};
 };

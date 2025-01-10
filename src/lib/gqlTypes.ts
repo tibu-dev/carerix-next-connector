@@ -1,17 +1,22 @@
 export interface GqlCarerixVacancy {
 	_id: string;
+
 	toCompany: {
 		_id: string;
+		name: string;
 	};
+
 	owner: {
-		emailAddress?: string;
+		emailAddress: string;
 	};
+
 	toVacancy: {
 		titleInformation?: string;
 		additionalInfo?: any;
 		minSalary?: number;
 		maxSalary?: number;
 	};
+
 	introInformation?: string;
 	companyInformation?: string;
 	vacancyInformation?: string;

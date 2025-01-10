@@ -4,7 +4,7 @@ import {
 	CarerixVacancy,
 	GqlCarerixEmployee,
 } from './types';
-import { getCarerixGqlClient } from './apiHelpers';
+import { CarerixConnection, getCarerixGqlClient } from './apiHelpers';
 import {
 	CARERIX_MUTATION_EMPLOYEE_APPLY,
 	CARERIX_QUERY_VACANCIES,
@@ -13,36 +13,37 @@ import {
 import moment from 'moment';
 import { parseCarerixVacancy } from './helpers';
 
-export const getCarerixVacancies = async () => {
+export const getCarerixVacancies = async (connection?: Partial<CarerixConnection>) => {
 	const dateFormat = 'YYYY-MM-DD HH:mm:ss';
 	const startDate = moment().endOf('day').format(dateFormat);
 	const endDate = moment().startOf('day').add(1, 'day').format(dateFormat);
 
-	const carerix = await getCarerixGqlClient();
-	const response = await carerix.query<{
+	const { client, options } = await getCarerixGqlClient(connection ?? {});
+	const response = await client.query<{
 		crPublicationPage: {
 			items: GqlCarerixVacancy[];
 		};
 	}>({
 		query: CARERIX_QUERY_VACANCIES,
 		variables: {
-			qualifier: `publicationStart <= (NSCalendarDate) '${startDate}' AND (publicationEnd > (NSCalendarDate) '${endDate}' OR publicationEnd = nil) AND toMedium.code = 'web'`,
+			qualifier: `publicationStart <= (NSCalendarDate) '${startDate}' AND (publicationEnd > (NSCalendarDate) '${endDate}' OR publicationEnd = nil) AND toMedium.code = '${options.mediumCode}'`,
 		},
 	});
 
 	const items = response?.data?.crPublicationPage?.items;
 
 	if (!items || !items.length) {
-		return { data: null, errors: 'No items returned from Carerix API' };
+		return []
 	}
 
 	const parsedVacancies = await Promise.all(items.map(parseCarerixVacancy));
 
-	return { data: parsedVacancies, errors: null };
+	return parsedVacancies;
 };
 
 export const getCarerixVacancy = async (
 	vacancyId: number,
+	connection?: Partial<CarerixConnection>
 ): Promise<CarerixVacancy | null> => {
 	if (!vacancyId) {
 		throw new Error('Cannot get Carerix vacancy without vacancyId');
@@ -50,8 +51,8 @@ export const getCarerixVacancy = async (
 
 	let response;
 	try {
-		const carerix = await getCarerixGqlClient();
-		response = await carerix.query<{ crPublication: GqlCarerixVacancy }>({
+		const { client } = await getCarerixGqlClient(connection ?? {});
+		response = await client.query<{ crPublication: GqlCarerixVacancy }>({
 			query: CARERIX_QUERY_VACANCY,
 			variables: {
 				id: vacancyId,
@@ -69,6 +70,7 @@ export const getCarerixVacancy = async (
 export const setCarerixEmployeeApply = async (
 	publicationId: string,
 	employeeData: CarerixEmployeeApply,
+	connection?: Partial<CarerixConnection>
 ): Promise<boolean> => {
 	// NOTE: Format some fields to fit in the notes
 	const notes = `Opleiding: \n${employeeData.education}\n\nMotivatie:\n${
@@ -90,8 +92,8 @@ export const setCarerixEmployeeApply = async (
 	};
 
 	try {
-		const carerix = await getCarerixGqlClient();
-		await carerix.mutate({
+		const { client } = await getCarerixGqlClient(connection ?? {});
+		await client.mutate({
 			mutation: CARERIX_MUTATION_EMPLOYEE_APPLY,
 			variables: {
 				publicationId,

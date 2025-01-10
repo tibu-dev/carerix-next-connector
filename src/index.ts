@@ -1,4 +1,4 @@
-import { CarerixVacancy } from './lib/types';
+import { CarerixEmployeeApply, CarerixVacancy } from './lib/types';
 import {
 	getCarerixVacancies,
 	getCarerixVacancy,
@@ -11,4 +11,4 @@ export const carerix = {
 	employeeApply: setCarerixEmployeeApply,
 };
 
-export type { CarerixVacancy };
+export type { CarerixVacancy, CarerixEmployeeApply };

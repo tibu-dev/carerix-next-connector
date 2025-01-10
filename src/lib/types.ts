@@ -1,5 +1,5 @@
 interface CarerixContact {
-	// TODO: Add these types again
+	emailAddress: string;
 }
 
 export interface CarerixVacancy {
@@ -11,9 +11,12 @@ export interface CarerixVacancy {
 		requirements: string;
 		offer: string;
 	};
-	contact?: CarerixContact;
+	owner?: CarerixContact;
 	title?: string;
-	location?: string;
+	company?: {
+		id: string;
+		name: string;
+	};
 	startDate?: string;
 	endDate?: string;
 	modified?: string;
