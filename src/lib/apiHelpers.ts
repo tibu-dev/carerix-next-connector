@@ -35,7 +35,7 @@ const getCarerixConnectionData = (
 
 	if (!data.clientId || !data.secret || !data.tokenEndpoint || !data.gqlUri) {
 		throw new Error(
-			'One or more required Carerix .env variables are missing. [CARERIX_CLIENT_ID, CARERIX_CLIENT_SECRET, CARERIX_TOKEN_ENDPOINT, CARERIX_GRAPHQL_URI]',
+			'One or more required Carerix .env variables are missing. [CARERIX_CLIENT_ID, CARERIX_CLIENT_SECRET, CARERIX_TOKEN_ENDPOINT]',
 		);
 	}
 

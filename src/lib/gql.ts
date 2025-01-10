@@ -6,6 +6,7 @@ const CARERIX_VACANCY_FIELDS = `
 	toCompany {
 		_id
 		name
+		visitCity
 	}
 
 	owner {

@@ -2,6 +2,12 @@ interface CarerixContact {
 	emailAddress: string;
 }
 
+interface CarerixCompany {
+	id: string;
+	name: string;
+	city: string;
+}
+
 export interface CarerixVacancy {
 	id: string;
 	content: {
@@ -13,10 +19,7 @@ export interface CarerixVacancy {
 	};
 	owner?: CarerixContact;
 	title?: string;
-	company?: {
-		id: string;
-		name: string;
-	};
+	company?: CarerixCompany;
 	startDate?: string;
 	endDate?: string;
 	modified?: string;

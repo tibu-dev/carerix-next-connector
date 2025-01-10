@@ -13,7 +13,9 @@ import {
 import moment from 'moment';
 import { parseCarerixVacancy } from './helpers';
 
-export const getCarerixVacancies = async (connection?: Partial<CarerixConnection>) => {
+export const getCarerixVacancies = async (
+	connection?: Partial<CarerixConnection>,
+) => {
 	const dateFormat = 'YYYY-MM-DD HH:mm:ss';
 	const startDate = moment().endOf('day').format(dateFormat);
 	const endDate = moment().startOf('day').add(1, 'day').format(dateFormat);
@@ -33,7 +35,7 @@ export const getCarerixVacancies = async (connection?: Partial<CarerixConnection
 	const items = response?.data?.crPublicationPage?.items;
 
 	if (!items || !items.length) {
-		return []
+		return [];
 	}
 
 	const parsedVacancies = await Promise.all(items.map(parseCarerixVacancy));
@@ -43,7 +45,7 @@ export const getCarerixVacancies = async (connection?: Partial<CarerixConnection
 
 export const getCarerixVacancy = async (
 	vacancyId: number,
-	connection?: Partial<CarerixConnection>
+	connection?: Partial<CarerixConnection>,
 ): Promise<CarerixVacancy | null> => {
 	if (!vacancyId) {
 		throw new Error('Cannot get Carerix vacancy without vacancyId');
@@ -70,7 +72,7 @@ export const getCarerixVacancy = async (
 export const setCarerixEmployeeApply = async (
 	publicationId: string,
 	employeeData: CarerixEmployeeApply,
-	connection?: Partial<CarerixConnection>
+	connection?: Partial<CarerixConnection>,
 ): Promise<boolean> => {
 	// NOTE: Format some fields to fit in the notes
 	const notes = `Opleiding: \n${employeeData.education}\n\nMotivatie:\n${
@@ -102,6 +104,8 @@ export const setCarerixEmployeeApply = async (
 		});
 	} catch (e) {
 		console.log(JSON.stringify(e, null, 4));
+
+		return false;
 	}
 
 	return true;

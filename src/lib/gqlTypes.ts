@@ -4,6 +4,7 @@ export interface GqlCarerixVacancy {
 	toCompany: {
 		_id: string;
 		name: string;
+		visitCity: string;
 	};
 
 	owner: {

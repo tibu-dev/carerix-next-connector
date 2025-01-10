@@ -16,16 +16,18 @@ export const parseCarerixVacancy = async (
 			offer: item.offerInformation ?? '',
 		},
 		owner: {
-			emailAddress: owner.emailAddress
+			emailAddress: owner.emailAddress,
 		},
 		title: toVacancy.titleInformation,
 		company: {
 			id: item.toCompany._id,
-			name: item.toCompany.name
+			name: item.toCompany.name,
+			city: item.toCompany.visitCity,
 		},
 		startDate: item.publicationStart,
 		endDate: item.publicationEnd,
 		modified: item.modificationDate,
+		// NOTE: Sadly, custom attributes are only supplied by ID and have been hardcoded for now
 		hoursPerWeek: parseInt(toVacancy.additionalInfo['_10361']),
 		salaryRange: {
 			min: toVacancy.minSalary ?? 0,
