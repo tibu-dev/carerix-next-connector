@@ -7,6 +7,7 @@ export interface CarerixConnection {
 	tokenEndpoint: string;
 	gqlUri: string;
 	mediumCode: string;
+	agency: string;
 }
 
 const getCarerixConnectionData = (
@@ -18,6 +19,7 @@ const getCarerixConnectionData = (
 		CARERIX_TOKEN_ENDPOINT,
 		CARERIX_GRAPHQL_URI,
 		CARERIX_MEDIUM_CODE,
+		CARERIX_AGENCY_NAME,
 	} = process.env;
 
 	const data = Object.assign(
@@ -29,6 +31,7 @@ const getCarerixConnectionData = (
 				CARERIX_GRAPHQL_URI ??
 				'https://api.carerix.io/graphql/v1/graphql',
 			mediumCode: CARERIX_MEDIUM_CODE ?? 'web',
+			agency: CARERIX_AGENCY_NAME ?? '',
 		},
 		connection,
 	);
@@ -99,6 +102,7 @@ export const getCarerixGqlClient = async (
 
 	const options = {
 		mediumCode: connectData.mediumCode,
+		agency: connectData.agency,
 	};
 
 	return {

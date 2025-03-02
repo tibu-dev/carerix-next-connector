@@ -16,6 +16,9 @@ export interface GqlCarerixVacancy {
 		additionalInfo?: any;
 		minSalary?: number;
 		maxSalary?: number;
+		agency: {
+			name: string;
+		};
 	};
 
 	introInformation?: string;

@@ -17,6 +17,9 @@ export interface CarerixVacancy {
 		requirements: string;
 		offer: string;
 	};
+	agency: {
+		name: string;
+	};
 	owner?: CarerixContact;
 	title?: string;
 	company?: CarerixCompany;

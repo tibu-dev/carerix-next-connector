@@ -18,6 +18,7 @@ export const parseCarerixVacancy = async (
 		owner: {
 			emailAddress: owner.emailAddress,
 		},
+		agency: { name: toVacancy.agency.name },
 		title: toVacancy.titleInformation,
 		company: {
 			id: item.toCompany._id,
