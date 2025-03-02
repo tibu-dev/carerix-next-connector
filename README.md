@@ -19,6 +19,7 @@ CARERIX_TOKEN_ENDPOINT=
 // Optional (defaults shown)
 CARERIX_GRAPHQL_URI=https://api.carerix.io/graphql/v1/graphql
 CARERIX_MEDIUM_CODE=web
+CARERIX_AGENCY_NAME=''
 ```
 
 ## Functions
@@ -27,7 +28,7 @@ The following methods are available:
 
 ### Get Vacancies
 
-``` TS
+```TS
 const vacancy: Promise<CarerixVacancy | null> =
 	await carerix.vacancy(
 		vacancyId: number,
