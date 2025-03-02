@@ -14,12 +14,12 @@ import {
 import moment from 'moment';
 import { parseCarerixVacancy } from './helpers';
 
-const getPublicationFilter = (mediumCode: string) => {
+const getPublicationFilter = (mediumCode?: string) => {
 	const dateFormat = 'YYYY-MM-DD HH:mm:ss';
 	const startDate = moment().endOf('day').format(dateFormat);
 	const endDate = moment().startOf('day').add(1, 'day').format(dateFormat);
 
-	return `publicationStart <= (NSCalendarDate) '${startDate}' AND (publicationEnd > (NSCalendarDate) '${endDate}' OR publicationEnd = nil) AND toMedium.code = '${mediumCode}'`;
+	return `publicationStart <= (NSCalendarDate) '${startDate}' AND (publicationEnd > (NSCalendarDate) '${endDate}' OR publicationEnd = nil)`;
 };
 
 export const getCarerixVacancies = async (
@@ -33,7 +33,7 @@ export const getCarerixVacancies = async (
 	}>({
 		query: CARERIX_QUERY_VACANCIES,
 		variables: {
-			qualifier: getPublicationFilter(options.mediumCode),
+			qualifier: getPublicationFilter(),
 		},
 	});
 
@@ -45,7 +45,16 @@ export const getCarerixVacancies = async (
 
 	const parsedVacancies = await Promise.all(items.map(parseCarerixVacancy));
 
-	return parsedVacancies;
+	//  NOTE: Filter out vacancies that are not from the correct agency
+	const filterdVacancies = parsedVacancies.filter((vacancy) => {
+		if (!options.agency) {
+			return true;
+		}
+
+		return vacancy.agency.name === options.agency;
+	});
+
+	return filterdVacancies;
 };
 
 export const getCarerixVacancy = async (
@@ -57,21 +66,37 @@ export const getCarerixVacancy = async (
 	}
 
 	let response;
+
 	try {
-		const { client } = await getCarerixGqlClient(connection ?? {});
+		const { client, options } = await getCarerixGqlClient(connection ?? {});
 		response = await client.query<{ crPublication: GqlCarerixVacancy }>({
 			query: CARERIX_QUERY_VACANCY,
 			variables: {
 				id: vacancyId,
 			},
 		});
-	} catch (e) {}
+
+		const { agency } = options;
+
+		response = await parseCarerixVacancy(response.data.crPublication);
+
+		if (!agency) {
+			return response;
+		}
+
+		//  NOTE: Filter out vacancies that are not from the correct agency
+		if (response.agency.name !== agency) {
+			return null;
+		}
+	} catch (e) {
+		// console.log(e);
+	}
 
 	if (!response) {
 		return null;
 	}
 
-	return await parseCarerixVacancy(response.data.crPublication);
+	return response;
 };
 
 export const getCarerixVacanciesPerLocation = async (
@@ -94,6 +119,9 @@ export const getCarerixVacanciesPerLocation = async (
 					additionalInfo: string;
 					minSalary: number;
 					maxSalary: number;
+					agency: {
+						name: string;
+					};
 				}[];
 			};
 		};
@@ -101,7 +129,7 @@ export const getCarerixVacanciesPerLocation = async (
 		query: CARERIX_QUERY_VACANCY_PER_LOCATION,
 		variables: {
 			locationId,
-			qualifier: getPublicationFilter(options.mediumCode),
+			qualifier: getPublicationFilter(),
 		},
 	});
 
@@ -115,6 +143,9 @@ export const getCarerixVacanciesPerLocation = async (
 					additionalInfo: vacancy.additionalInfo,
 					minSalary: vacancy.minSalary,
 					maxSalary: vacancy.maxSalary,
+					agency: {
+						name: vacancy.agency.name,
+					},
 				},
 			});
 		});
@@ -126,7 +157,15 @@ export const getCarerixVacanciesPerLocation = async (
 
 	const parsedVacancies = await Promise.all(items.map(parseCarerixVacancy));
 
-	return parsedVacancies;
+	const filteredVacancies = parsedVacancies.filter((vacancy) => {
+		if (!options.agency) {
+			return true;
+		}
+
+		return vacancy.agency.name === options.agency;
+	});
+
+	return filteredVacancies;
 };
 
 export const setCarerixEmployeeApply = async (

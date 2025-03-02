@@ -18,6 +18,9 @@ const CARERIX_VACANCY_FIELDS = `
 		additionalInfo
 		minSalary
 		maxSalary
+		agency {
+			name
+		}
 	}
 
 	introInformation
@@ -68,6 +71,9 @@ export const CARERIX_QUERY_VACANCY_PER_LOCATION = gql`
 					additionalInfo
 					minSalary
 					maxSalary
+					agency {
+						name
+					}
 				}
 			}
 		}
